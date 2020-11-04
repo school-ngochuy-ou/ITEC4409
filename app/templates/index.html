@@ -11,7 +11,7 @@
          <h1 class="header">Welcome</h1>
         <li><a href="{{ url_for('render_products') }}">All</a></li>
         {% for cat in categories %}
-            <li><a href="#">{{ cat.name }}</a></li>
+            <li><a href="{{ url_for('render_products', category_id=cat.id) }}">{{ cat.name }}</a></li>
         {% endfor %}
     </div>
 </body>

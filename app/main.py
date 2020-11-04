@@ -10,7 +10,17 @@ def render_index():
 
 @app.route("/products")
 def render_products():
-    return render_template('products.html', products=utils.load_products())
+    category_id = request.args.get('category_id')
+    kw = request.args.get('kw')
+    from_price = request.args.get('from_price')
+    to_price = request.args.get('to_price')
+    products = utils.load_products(kw, from_price, to_price)
+
+    if category_id:
+        category_id = int(category_id)
+        products = [p for p in products if p["category_id"] == category_id]
+
+    return render_template('products.html', products=products)
 
 
 @app.route("/products/<int:product_id>")
