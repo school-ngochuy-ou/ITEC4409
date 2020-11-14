@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Home page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
     <div class="container">
          <h1 class="header">Welcome</h1>
-        <li><a href="{{ url_for('render_products') }}">All</a></li>
-        {% for cat in categories %}
-            <li><a href="{{ url_for('render_products', category_id=cat.id) }}">{{ cat.name }}</a></li>
-        {% endfor %}
     </div>
 </body>
 </html>

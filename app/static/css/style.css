@@ -1,7 +1,3 @@
-* {
-    box-sizing: border-box;
-}
-
-.header {
-    color: red;
+.height-large {
+    height: 450px;
 }
