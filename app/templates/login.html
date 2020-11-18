@@ -1,0 +1,36 @@
+{% extends "index.html" %}
+
+{% block body %}
+    <div class="vh-100" id="form">
+        <div class="vw-100 vh-100 cover"></div>
+        <div class="row h-100 mw-100">
+            <div class="col-7"></div>
+            <div class="col-5 form">
+                <section class="w-100 h-100">
+                    <form method="POST" class="w-100"
+                    action="{{ url_for('login') }}">
+                        <h1 class="text-primary text-bold text-center">Login</h1>
+                        <div class="form-group">
+                            <label for="id">Username</label>
+                            <input type="text" class="form-control" id="id" aria-describedby="id" name="id">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="password">
+                        </div>
+                        {% if message %}
+                            <div class="form-group">
+                                <label class="text-danger">
+                                    {{ message }}
+                                </label>
+                            </div>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <a type="button" class="btn btn-success"
+                        href="{{ url_for('register') }}">Register</a>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </div>
+{% endblock %}

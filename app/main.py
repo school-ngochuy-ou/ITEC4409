@@ -6,7 +6,8 @@ from flask import redirect
 
 @app.route("/")
 def index():
-    return redirect("/admin")
+
+    return render_template("index.html");
 
 
 if __name__ == "__main__":

@@ -3,17 +3,7 @@
 {% block head_css %}
     {{ super() }}
     <style>
-        {% if not current_user.is_authenticated %}
-            .navbar {
-                display: none;
-            }
-        {% endif %}
-
-        #login-form section {
-            position: relative;
-        }
-
-        #login-form section > form {
+        #form section > form {
             position: absolute;
             left: 50%;
             top: 50%;
@@ -24,7 +14,7 @@
             background-color: #f8f9facc!important;
         }
 
-        #login-form .cover {
+        #form .cover {
             position: fixed;
             top: 0;
             left: 0;
