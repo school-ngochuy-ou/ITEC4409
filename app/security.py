@@ -1,15 +1,16 @@
-from app import app, login
+from app import app, login, mail
 from app.DAO import get_user, save_user
 from app.models import UserRole, User
-from flask import request, redirect, render_template
+from flask import request, redirect, render_template, url_for
 from flask_login import login_user, current_user, logout_user
+from flask_mail import Message
 import hashlib
 import datetime
+import uuid
 
 
 @login.user_loader
 def load_user(user_id):
-
 	return get_user(user_id)
 
 
@@ -29,7 +30,6 @@ def register():
 		return redirect("/register?message=Username and password can not be empty")
 
 	if get_user(id) is not None:
-
 		return redirect("/register?message=Username is taken")
 
 	user.id = id
@@ -79,6 +79,54 @@ def login():
 	return render_template("login.html", message="Invalid password")
 
 
-def is_user_valid(user):
+@app.route("/u/forgot/<id>")
+def forgot_password(id):
+	user = get_user(id)
 
+	if id is None or user is None:
+		return render_template("login.html", message="User not found")
+
+	user.password_reset_token = str(uuid.uuid4());
+	msg = Message("Reset your password", recipients=[user.email])
+	url = url_for("reset_password", id=id, token=user.password_reset_token, _external=True)
+	msg.html = "<a href='" + url + "'>Click here to reset your password</a>"
+
+	with app.app_context():
+		mail.send(msg)
+
+	save_user(user)
+
+	return render_template("login.html", message="Check your email (inbox, spam) to reset your password.")
+
+
+@app.route("/u/reset/<id>", methods=['GET', 'POST'])
+def reset_password(id):
+	user = get_user(id)
+	token = request.args.get("token")
+
+	if id is None or user is None:
+
+		return render_template("login.html", message="User not found")
+
+	if request.method == "GET":
+		if token == user.password_reset_token:
+
+			return render_template("reset_password.html", user_id=id, message="")
+
+		return render_template("login.html", message="Invalid token")
+
+	password = request.form["password"]
+	re_password = request.form["re-password"]
+
+	if password != re_password:
+		return render_template("reset_password.html", user_id=id, message="Password and Re-password must match")
+
+	user.password = str(hashlib.md5(password.strip().encode("utf-8")).hexdigest())
+	user.password_reset_token = None
+	save_user(user)
+
+	return render_template("login.html")
+
+
+def is_user_valid(user):
 	return len(user.id) is not 0 and len(user.password) is not 0

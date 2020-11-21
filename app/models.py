@@ -61,6 +61,8 @@ class User(BaseModel, UserMixin):
 	name = Column(String(255), nullable=True)
 	password = Column(String(255), nullable=False)
 	role = Column(Enum(UserRole), nullable=False, default=UserRole.CUSTOMER)
+	email = Column(String(255), nullable=False)
+	password_reset_token = Column(String(255), nullable=False)
 
 	def __str__(self):
 		return self.name
