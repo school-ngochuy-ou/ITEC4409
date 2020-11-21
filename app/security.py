@@ -1,7 +1,7 @@
 from app import app, login
 from app.DAO import get_user, save_user
 from app.models import UserRole, User
-from flask import request, redirect, render_template, url_for
+from flask import request, redirect, render_template
 from flask_login import login_user, current_user, logout_user
 import hashlib
 import datetime
@@ -66,14 +66,12 @@ def login():
 	user = get_user(id)
 
 	if user is None:
-
 		return render_template("login.html", message="User not found")
 
 	if user.password == password:
 		login_user(user)
 
 		if user.role is UserRole.ADMIN:
-
 			return redirect("/admin")
 
 		return redirect("/")

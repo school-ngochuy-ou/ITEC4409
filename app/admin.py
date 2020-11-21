@@ -9,7 +9,6 @@ from flask import redirect, url_for
 class MyAdminIndexView(AdminIndexView):
 	@expose('/')
 	def index(self):
-		print("----" + str(current_user.role))
 		if not current_user.is_authenticated or current_user.role is not UserRole.ADMIN:
 			return redirect(url_for('login'))
 

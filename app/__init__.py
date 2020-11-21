@@ -18,9 +18,9 @@ app.config.update(dict(
 	MAIL_PORT=587,
 	MAIL_USE_TLS=True,
 	MAIL_USE_SSL=False,
-	MAIL_USERNAME=json_config.mail.MAIL_USERNAME,
-	MAIL_PASSWORD=json_config.mail.MAIL_PASSWORD,
-	MAIL_DEFAULT_SENDER=json_config.mail.MAIL_DEFAULT_SENDER,
+	MAIL_USERNAME=json_config["mail"]["MAIL_USERNAME"],
+	MAIL_PASSWORD=json_config["mail"]["MAIL_PASSWORD"],
+	# MAIL_DEFAULT_SENDER=json_config["mail"]["MAIL_DEFAULT_SENDER"],
 ))
 
 db = SQLAlchemy(app=app)

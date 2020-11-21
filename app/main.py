@@ -3,6 +3,7 @@ from app.admin import *
 from app.security import *
 from flask import redirect
 
+
 @app.route("/")
 def index():
     # msg = Message("Reset your password", recipients=["ngochuy.ou@gmail.com"], sender="ngochuy.ou.services@hotmail.com")
