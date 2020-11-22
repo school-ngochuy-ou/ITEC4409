@@ -1,6 +1,6 @@
 from app import app, mail
 from app.admin import *
-from app.security import *
+from app.user import *
 from flask import redirect
 
 

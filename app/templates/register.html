@@ -1,5 +1,7 @@
 {% extends "index.html" %}
 
+{% block navbar %}
+{% endblock %}
 {% block body %}
     <div class="vh-100" id="form">
         <div class="vw-100 vh-100 cover"></div>
@@ -12,15 +14,22 @@
                         <h1 class="text-primary text-bold text-center">Register</h1>
                         <div class="form-group">
                             <label for="id">Username</label>
-                            <input type="text" class="form-control" id="id" aria-describedby="id" name="id">
+                            <input type="text" class="form-control" id="id" aria-describedby="id" name="id"
+                            required="required">
                         </div>
                         <div class="form-group">
                             <label for="id">Name</label>
                             <input type="text" class="form-control" id="name" aria-describedby="name" name="name">
                         </div>
                         <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" id="email" aria-describedby="email" name="email"
+                            required="required">
+                        </div>
+                        <div class="form-group">
                             <label for="password">Password</label>
-                            <input type="password" class="form-control" id="password" name="password">
+                            <input type="password" class="form-control" id="password" name="password"
+                            required="required">
                         </div>
                         {% if message %}
                             <div class="form-group">

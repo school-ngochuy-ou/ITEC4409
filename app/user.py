@@ -2,11 +2,27 @@ from app import app, login, mail
 from app.DAO import get_user, save_user
 from app.models import UserRole, User
 from flask import request, redirect, render_template, url_for
-from flask_login import login_user, current_user, logout_user
+from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 import hashlib
 import datetime
 import uuid
+import re
+import enum
+
+
+class RegistrationErrors(enum.Enum):
+	USERNAME = 0
+	PASSWORD = 1
+	EMAIL = 2
+	NONE = 3
+
+
+registration_handlers = dict()
+registration_handlers[RegistrationErrors.USERNAME] = "Username can not be empty"
+registration_handlers[RegistrationErrors.PASSWORD] = "Password can not be empty"
+registration_handlers[RegistrationErrors.EMAIL] = "Invalid email"
+registration_handlers[RegistrationErrors.NONE] = ""
 
 
 @login.user_loader
@@ -24,10 +40,12 @@ def register():
 
 	id = request.form.get("id")
 	password = request.form.get("password")
-	user = User(id=id, password=password)
+	email = request.form.get("email")
+	user = User(id=id, password=password, email=email)
+	err = is_user_valid(user)
 
-	if not is_user_valid(user):
-		return redirect("/register?message=Username and password can not be empty")
+	if err is not RegistrationErrors.NONE:
+		return redirect("/register?message=" + registration_handlers[err])
 
 	if get_user(id) is not None:
 		return redirect("/register?message=Username is taken")
@@ -44,6 +62,7 @@ def register():
 
 
 @app.route("/logout", methods=["GET"])
+@login_required
 def logout():
 	if current_user.is_authenticated:
 		logout_user()
@@ -59,7 +78,6 @@ def login():
 
 		return render_template("/login.html")
 
-	message = ""
 	id = request.form.get("id")
 	password = request.form.get("password")
 	password = str(hashlib.md5(password.strip().encode("utf-8")).hexdigest())
@@ -67,6 +85,9 @@ def login():
 
 	if user is None:
 		return render_template("login.html", message="User not found")
+
+	if not user.is_active:
+		return render_template("login.html", message="Your account is locked")
 
 	if user.password == password:
 		login_user(user)
@@ -86,7 +107,7 @@ def forgot_password(id):
 	if id is None or user is None:
 		return render_template("login.html", message="User not found")
 
-	user.password_reset_token = str(uuid.uuid4());
+	user.password_reset_token = str(uuid.uuid4())
 	msg = Message("Reset your password", recipients=[user.email])
 	url = url_for("reset_password", id=id, token=user.password_reset_token, _external=True)
 	msg.html = "<a href='" + url + "'>Click here to reset your password</a>"
@@ -105,12 +126,10 @@ def reset_password(id):
 	token = request.args.get("token")
 
 	if id is None or user is None:
-
 		return render_template("login.html", message="User not found")
 
 	if request.method == "GET":
 		if token == user.password_reset_token:
-
 			return render_template("reset_password.html", user_id=id, message="")
 
 		return render_template("login.html", message="Invalid token")
@@ -128,5 +147,52 @@ def reset_password(id):
 	return render_template("login.html")
 
 
+@app.route("/u/edit/<id>", methods=["GET", "POST"])
+@login_required
+def edit_user(id):
+	user = get_user(id)
+
+	if user is None:
+		return render_template("edit_account.html", error="User not found")
+
+	if request.method == "GET":
+		if user.id != current_user.id:
+			return render_template("edit_account.html", error="Access denied")
+
+		return render_template("edit_account.html", user=user)
+
+	name = request.form["name"].strip()
+	email = request.form["email"].strip()
+	password = request.form["password"].strip()
+	re_password = request.form["re-password"].strip()
+	user.name = name
+	user.email = email
+
+	if len(password) != 0:
+		if password != re_password:
+			return render_template("edit_account.html", user=user, message="Password and Re-password must match")
+
+	user.password = str(hashlib.md5(password.encode("utf-8")).hexdigest())
+	err = is_user_valid(user)
+
+	if err is not RegistrationErrors.NONE:
+		return render_template("edit_account.html", user=user, message=registration_handlers[err])
+
+	save_user(user)
+
+	return render_template("edit_account.html", user=user, message="DONE")
+
+
 def is_user_valid(user):
-	return len(user.id) is not 0 and len(user.password) is not 0
+	if len(user.id) == 0:
+		return RegistrationErrors.USERNAME
+
+	if len(user.password) == 0:
+		return RegistrationErrors.PASSWORD
+
+	regex = r'[\w.-]+@[\w.-]+'
+
+	if re.search(regex, user.email) is None:
+		return RegistrationErrors.EMAIL
+
+	return RegistrationErrors.NONE
