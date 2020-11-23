@@ -48,6 +48,9 @@ class CategoryView(PermanentRecordView):
 	form_columns = ["name", "price", "notes", "is_active"]
 	column_list = ["name", "price", "notes", "created_date", "is_active"]
 
+	def is_accessible(self):
+		return current_user.is_authenticated and current_user.role is UserRole.ADMIN
+
 
 class RoomView(PermanentRecordView):
 	form_excluded_columns = BaseRecordView.form_excluded_columns + ("rooms", )

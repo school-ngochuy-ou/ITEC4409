@@ -18,6 +18,11 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav mr-auto">
                     {% if current_user.is_authenticated %}
+                        {% if current_user.role != customer_role %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('get_rooms') }}">Rooms</a>
+                            </li>
+                        {% endif %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Account</a>

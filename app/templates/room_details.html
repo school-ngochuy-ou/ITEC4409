@@ -1,0 +1,45 @@
+{% extends "index.html" %}
+
+{% block body %}
+    <div class="container">
+        {% if error %}
+            <h3 class="text-center text-danger">{{ error }}</h3>
+        {% else %}
+            <h1 class="text-center text-primary">Edit room</h1>
+            <form method="POST">
+                {% if current_user.role == admin_role or current_user.role == manager_role %}
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" class="form-control" id="name" aria-describedby="name" placeholder="Room name"
+                        required="required" value="{{ room.name }}" name="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="price">Price</label>
+                        <input type="number" class="form-control" id="price" aria-describedby="price" placeholder="Room price"
+                        required="required" value="{{ room.price }}" name="price">
+                    </div>
+                {% endif %}
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select class="form-control" id="status" name="status">
+                        <option value="{{ room_status[0].value }}" {% if room.status.value == room_status[0].value %} selected="selected"{% endif %}>{{ room_status[0].value }}</option>
+                        <option value="{{ room_status[1].value }}" {% if room.status.value == room_status[1].value %} selected="selected"{% endif %}>{{ room_status[1].value }}</option>
+                        <option value="{{ room_status[2].value }}" {% if room.status.value == room_status[2].value %} selected="selected"{% endif %}>{{ room_status[2].value }}</option>
+                        <option value="{{ room_status[3].value }}" {% if room.status.value == room_status[3].value %} selected="selected"{% endif %}>{{ room_status[3].value }}</option>
+                    </select>
+                </div>
+                {% if current_user.role == admin_role %}
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select class="form-control" id="category" name="category">
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if room.category.id == category.id %} selected="selected"{% endif %}>{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}

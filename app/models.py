@@ -28,10 +28,10 @@ class Category(BaseModel):
 
 
 class RoomStatus(enum.Enum):
-	BOOKED = 1
-	VACANT = 2
-	OCCUPIED = 3
-	UNAVAILABLE = 4
+	BOOKED = "BOOKED"
+	VACANT = "VACANT"
+	OCCUPIED = "OCCUPIED"
+	UNAVAILABLE = "UNAVAILABLE"
 
 
 class Room(BaseModel):
@@ -48,10 +48,10 @@ class Room(BaseModel):
 
 
 class UserRole(enum.Enum):
-	ADMIN = 1
-	CUSTOMER = 2
-	MANAGER = 3
-	EMPLOYEE = 4
+	ADMIN = "ADMIN"
+	CUSTOMER = "CUSTOMER"
+	MANAGER = "MANAGER"
+	EMPLOYEE = "EMPLOYEE"
 
 
 class User(BaseModel, UserMixin):
