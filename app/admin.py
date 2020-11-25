@@ -68,7 +68,19 @@ class UserView(PermanentRecordView):
 	column_labels = dict(id="Username")
 
 
+class ReceiptView(BaseView):
+
+	@expose("/")
+	def index(self):
+
+		return redirect(url_for('obtain_receipts', state="view"))
+
+	def is_accessible(self):
+		return current_user.is_authenticated and current_user.role is not UserRole.CUSTOMER
+
+
 admin.add_view(CategoryView(Category, db.session))
 admin.add_view(RoomView(Room, db.session))
 admin.add_view(UserView(User, db.session))
+admin.add_view(ReceiptView(name="Receipts"))
 admin.add_view(LogoutView(name="Log out"))

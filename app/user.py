@@ -11,6 +11,14 @@ import re
 import enum
 
 
+admin_user = get_user("admin")
+
+if not admin_user:
+	admin_user = User(id="admin", password=str(hashlib.md5("admin".encode("utf-8")).hexdigest()),
+					  email="ngochuy.ou@gmail.com", name="Administrator", role=UserRole.ADMIN)
+	save_user(admin_user)
+
+
 class RegistrationErrors(enum.Enum):
 	USERNAME = 0
 	PASSWORD = 1

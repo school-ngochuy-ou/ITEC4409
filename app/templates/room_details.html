@@ -7,7 +7,7 @@
         {% else %}
             <h1 class="text-center text-primary">Edit room</h1>
             <form method="POST">
-                {% if current_user.role == admin_role or current_user.role == manager_role %}
+                {% if current_user.role == roles.admin or current_user.role == role.manager %}
                     <div class="form-group">
                         <label for="name">Name</label>
                         <input type="text" class="form-control" id="name" aria-describedby="name" placeholder="Room name"
@@ -28,7 +28,7 @@
                         <option value="{{ room_status[3].value }}" {% if room.status.value == room_status[3].value %} selected="selected"{% endif %}>{{ room_status[3].value }}</option>
                     </select>
                 </div>
-                {% if current_user.role == admin_role %}
+                {% if current_user.role == roles.admin %}
                     <div class="form-group">
                         <label for="category">Category</label>
                         <select class="form-control" id="category" name="category">

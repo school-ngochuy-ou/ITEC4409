@@ -1,7 +1,7 @@
 import enum
 import datetime
 from app import db
-from sqlalchemy import Column, Integer, String, Float,\
+from sqlalchemy import Column, Integer, String, Float, \
 	Enum, ForeignKey, Boolean, Date
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin
@@ -34,19 +34,6 @@ class RoomStatus(enum.Enum):
 	UNAVAILABLE = "UNAVAILABLE"
 
 
-class Room(BaseModel):
-	__tablename__ = "rooms"
-
-	id = Column(Integer, primary_key=True, autoincrement=True)
-	name = Column(String(255), nullable=False)
-	price = Column(Float, nullable=False)
-	status = Column(Enum(RoomStatus), nullable=False)
-	category_id = Column(Integer, ForeignKey(Category.id), nullable=False)
-
-	def __str__(self):
-		return self.name
-
-
 class UserRole(enum.Enum):
 	ADMIN = "ADMIN"
 	CUSTOMER = "CUSTOMER"
@@ -62,10 +49,88 @@ class User(BaseModel, UserMixin):
 	password = Column(String(255), nullable=False)
 	role = Column(Enum(UserRole), nullable=False, default=UserRole.CUSTOMER)
 	email = Column(String(255), nullable=False)
-	password_reset_token = Column(String(255), nullable=False)
+	password_reset_token = Column(String(255), nullable=True)
+	receipts = relationship("Receipt", backref="user", lazy=True)
 
 	def __str__(self):
 		return self.name
+
+
+class Room(BaseModel):
+	__tablename__ = "rooms"
+
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(255), nullable=False)
+	price = Column(Float, nullable=False)
+	status = Column(Enum(RoomStatus), nullable=False)
+	category_id = Column(Integer, ForeignKey(Category.id), nullable=False)
+
+	def __str__(self):
+		return self.name
+
+	def serialize(self):
+		return {
+			"id": self.id,
+			"name": self.name,
+			"price": self.price,
+			"status": self.status.value,
+			"category_id": self.category_id
+		}
+
+
+class Receipt(BaseModel):
+	__tablename__ = "receipts"
+
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	address = Column(String(255), nullable=True)
+	customer_name = Column(String(255), nullable=True)
+	total = Column(Float, nullable=False, default=0.0)
+	user_id = Column(String(255), ForeignKey(User.id), nullable=True)
+
+
+class PaymentStatus(enum.Enum):
+	PAID = "PAID"
+	PENDING = "PENDING"
+
+
+class ReceiptDetail(BaseModel):
+	__tablename__ = "receipt_details"
+
+	def __init__(self, args):
+		if type(args) is dict:
+			self.receipt_id = args.get("receipt_id")
+			self.room_id = args.get("room_id")
+			self.days = int(args.get("days"))
+			self.price = float(args.get("price"))
+			self.status = args.get("status")
+			self.total = self.days * self.price
+
+	receipt_id = Column(Integer, ForeignKey(Receipt.id), primary_key=True)
+	room_id = Column(Integer, ForeignKey(Room.id), primary_key=True)
+	days = Column(Integer, nullable=False, default=1)
+	price = Column(Float, nullable=False, default=0.0)
+	total = Column(Float, nullable=False, default=0.0)
+	status = Column(Enum(PaymentStatus), nullable=False)
+	room = relationship(Room, backref="details", lazy=False)
+	receipt = relationship(Receipt, backref="details", lazy=False)
+
+
+def get_roles_as_dict():
+
+	return dict({
+		"customer": UserRole.CUSTOMER,
+		"admin": UserRole.ADMIN,
+		"manager": UserRole.MANAGER,
+		"employee": UserRole.EMPLOYEE,
+	})
+
+
+def get_payment_status_as_dict():
+
+	return dict({
+		"paid": PaymentStatus.PAID,
+		"pending": PaymentStatus.PENDING,
+	})
 
 
 if __name__ == "__main__":
