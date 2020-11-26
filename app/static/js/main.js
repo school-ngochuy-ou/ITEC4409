@@ -22,8 +22,6 @@ async function onUsernameInputBlur() {
     return;
 }
 
-var global_item_id = 1;
-
 async function onAddItemClick() {
     let root = document.getElementById('receipt-items-container');
     let res = await fetch("/rooms", {
@@ -82,8 +80,7 @@ function onRDRemoveBtnClick(id) {
                     .forEach(e => root.appendChild(e));
 }
 
-
-async function onRDSubmit() {
+function checkRDForm() {
     let form = document.getElementById("rd-form");
     let rooms = document.querySelectorAll("[name='rd-item']");
 
@@ -95,7 +92,7 @@ async function onRDSubmit() {
         if (isEmpty([id, duration, price])) {
             document.getElementById("rd-items-msg").innerText = "Receipt details can not contain empty information";
 
-            return {};
+            return { result: false };
         }
 
         document.getElementById("rd-items-msg").innerText = "";
@@ -105,7 +102,7 @@ async function onRDSubmit() {
             days: duration,
             price
         };
-    });
+    }).filter(ele => ele != {});
     let username = document.getElementById("username-input").value;
     let customerName = document.getElementById("customer_name").value;
     let address = document.getElementById("address").value;
@@ -116,17 +113,41 @@ async function onRDSubmit() {
         if (isEmpty([customerName, address])) {
             document.getElementById('username-input-msg').innerText = "Customer information can not be empty";
 
-            return;
+            return { result: false };
         }
 
         document.getElementById('username-input-msg').innerText = "";
     }
 
-    let body = {
+    if (rooms.length == 0 ) {
+        document.getElementById('username-input-msg').innerText = "Receipt details can not be empty";
+
+        return { result: false };
+    }
+
+    document.getElementById('username-input-msg').innerText = "";
+
+    return {
+        result: true,
         username,
         customer_name: customerName,
         address,
         rooms
+    };
+}
+
+async function onRDSubmit() {
+    let checkResult = checkRDForm();
+
+    if (!checkResult.result) {
+        return;
+    }
+
+    let body = {
+        username: checkResult.username,
+        customer_name: checkResult.customer_name,
+        address: checkResult.address,
+        rooms: checkResult.rooms
     };
     let res = await fetch('/create_receipt', {
         method: "POST",
@@ -152,3 +173,40 @@ const isEmpty = (ele) => {
 
     return ele == null || ele.length == 0;
 }
+
+async function onRDEditSubmit() {
+    let checkResult = checkRDForm();
+
+    if (!checkResult.result) {
+        return;
+    }
+
+    let body = {
+        username: checkResult.username,
+        customer_name: checkResult.customer_name,
+        address: checkResult.address,
+        rooms: checkResult.rooms
+    };
+    console.log(body.rooms);
+    let res = await fetch(window.location, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    if (res.ok) {
+        alert("Success")
+        return;
+    }
+
+    alert("Error: " + await res.text())
+    return;
+}
+
+var global_item_id;
+
+window.addEventListener('load', function () {
+    global_item_id = Array.from(document.querySelectorAll("[name='rd-item']")).length;
+})

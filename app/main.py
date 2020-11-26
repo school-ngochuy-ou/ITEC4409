@@ -1,8 +1,8 @@
-from app import app, mail
+from app import app, mail, db
 from app.admin import *
 from app.user import *
 from app.DAO import get_rooms as dao_get_rooms, get_room as dao_get_room, get_categories, get_category, save_room,\
-    get_receipts, count_user, save_receipt
+    get_receipts, count_user, save_receipt, get_receipt, get_receipt_details
 from app.models import RoomStatus, get_roles_as_dict, Receipt, ReceiptDetail, PaymentStatus
 from flask import redirect, jsonify
 
@@ -112,11 +112,57 @@ def obtain_receipts(state):
     return render_template("/receipts.html", roles=get_roles_as_dict(), list=get_receipts(), state=state)
 
 
-@app.route("/receipt/<id>", methods=["GET", "POST"])
+@app.route("/receipt/<receipt_id>", methods=["GET", "POST"])
 @login_required
-def receipt_details(id):
+def receipt_details(receipt_id):
+    receipt = get_receipt(receipt_id)
 
-    return render_template("/receipts.html", roles=get_roles_as_dict(), list=get_receipts())
+    if receipt is None:
+        return render_template("/receipt_details.html", roles=get_roles_as_dict(), error="Receipt not found")
+
+    if request.method == "GET":
+        return render_template("/receipt_details.html", roles=get_roles_as_dict(), receipt=receipt, rooms=dao_get_rooms())
+
+    data = request.get_json()
+    user_id = data.get("username")
+    customer_name = data.get("customer_name")
+    address = data.get("address")
+    user = get_user(user_id)
+
+    if not user:
+        if len(customer_name) == 0 and len(address) == 0:
+            return "Invalid request", 400
+
+        receipt.customer_name = customer_name
+        receipt.address = address
+        user_id = None
+
+    receipt.user_id = user_id
+    rooms = data.get("rooms")
+
+    if len(rooms) == 0:
+        return "Receipt items can not be empty", 400
+
+    details = []
+
+    for detail in rooms:
+        detail["receipt_id"] = receipt_id
+        detail["status"] = PaymentStatus.PENDING
+        new_detail = get_receipt_details(detail["receipt_id"], detail["room_id"])
+
+        if new_detail is not None:
+            new_detail.days = int(detail["days"])
+            new_detail.price = float(detail["price"])
+            new_detail.total = new_detail.days * new_detail.price
+        else:
+            new_detail = ReceiptDetail(detail)
+
+        details.append(new_detail)
+
+    receipt.details = details
+    db.session.commit()
+
+    return '', 200
 
 
 if __name__ == "__main__":

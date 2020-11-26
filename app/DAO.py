@@ -50,9 +50,15 @@ def get_receipts():
 	return Receipt.query.all()
 
 
-def get_receipt_detail(id):
+def get_receipt(id):
 
-	return ReceiptDetail.query.filter(ReceiptDetail.receipt_id == id.strip()).all()
+	return Receipt.query.filter(Receipt.id == id.strip()).first()
+
+
+def get_receipt_details(receipt_id, room_id):
+
+	return ReceiptDetail.query.filter((ReceiptDetail.receipt_id == receipt_id.strip()) &
+									  (ReceiptDetail.room_id == room_id.strip())).first()
 
 
 def count_user(id):

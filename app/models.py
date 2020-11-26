@@ -3,7 +3,7 @@ import datetime
 from app import db
 from sqlalchemy import Column, Integer, String, Float, \
 	Enum, ForeignKey, Boolean, Date
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from flask_login import UserMixin
 
 
@@ -111,8 +111,8 @@ class ReceiptDetail(BaseModel):
 	price = Column(Float, nullable=False, default=0.0)
 	total = Column(Float, nullable=False, default=0.0)
 	status = Column(Enum(PaymentStatus), nullable=False)
-	room = relationship(Room, backref="details", lazy=False)
-	receipt = relationship(Receipt, backref="details", lazy=False)
+	room = relationship(Room, backref=backref("details", cascade="all, delete-orphan"))
+	receipts = relationship(Receipt, backref=backref("details", cascade="all, delete-orphan"))
 
 
 def get_roles_as_dict():
