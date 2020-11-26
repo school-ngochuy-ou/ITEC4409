@@ -22,7 +22,13 @@
                 {% for receipt in list %}
                 <tr>
                     <th scope="row">{{ receipt.id }}</th>
-                    <td>{{ receipt.customer_name }}</td>
+                    <td>
+                        {% if not receipt.user_id %}
+                            {{ receipt.customer_name }}
+                        {% else %}
+                            {{ receipt.user_id }}
+                        {% endif %}
+                    </td>
                     <td>{{ receipt.total }}</td>
                     <td>
                         <a href="{{ url_for('receipt_details', receipt_id=receipt.id) }}"><button class="btn btn-primary">Details</button></a>
@@ -90,6 +96,18 @@
                                 <label for="rd-price" class="text-primary">Price</label>
                                 <input type="number" class="form-control" placeholder="Price"
                                 name="price" min="1.0" id="rd-price">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="rd-status" class="text-primary">Status</label>
+                                <select class="form-control"
+                                id="rd-status" required="required">
+                                    <option value="{{ payment_status.pending.value }}"
+                                            class="text-muted">{{ payment_status.pending.value }}</option>
+                                    <option value="{{ payment_status.paid.value }}"
+                                            class="text-success">{{ payment_status.paid.value }}</option>
+                                </select>
                             </div>
                         </div>
                         <div class="col">

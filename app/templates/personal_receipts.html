@@ -1,0 +1,33 @@
+{% extends "index.html" %}
+
+{% block body %}
+    <div class="container">
+        {% if list|length == 0 %}
+            <h1 class="text-center text-muted">You have no receipt</h1>
+        {% else %}
+            <h1 class="text-center text-primary">Your receipts</h1>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Receipt ID</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for receipt in list %}
+                    <tr>
+                        <th scope="row">{{ receipt.id }}</th>
+                        <td>{{ receipt.total }}</td>
+                        <td>
+                            <a href="{{ url_for('receipt_details', receipt_id=receipt.id) }}">
+                                <button class="btn btn-primary">Details</button>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

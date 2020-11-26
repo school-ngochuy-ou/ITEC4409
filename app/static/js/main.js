@@ -60,6 +60,15 @@ async function onAddItemClick() {
             </div>
             <div class="col">
                 <div class="form-group">
+                    <label for="rd-status" class="text-primary">Status</label>
+                    <select class="form-control" id="rd-status" required="required">
+                        <option value="PENDING" class="text-muted">PENDING</option>
+                        <option value="PAID" class="text-success">PAID</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
                     <label class="text-primary">Actions</label></br>
                     <button class="btn btn-danger" type="button"
                     onclick="onRDRemoveBtnClick(${nextId})">
@@ -85,14 +94,15 @@ function checkRDForm() {
     let rooms = document.querySelectorAll("[name='rd-item']");
 
     rooms = Array.from(rooms).map(e => {
-        id = e.querySelector("select").value;
+        id = e.querySelector("select[id='rd-room-id']").value;
         duration = e.querySelector("input[id='rd-days']").value;
         price = e.querySelector("input[id='rd-price']").value;
+        status = e.querySelector("select[id='rd-status']").value;
 
         if (isEmpty([id, duration, price])) {
             document.getElementById("rd-items-msg").innerText = "Receipt details can not contain empty information";
 
-            return { result: false };
+            return { };
         }
 
         document.getElementById("rd-items-msg").innerText = "";
@@ -100,9 +110,14 @@ function checkRDForm() {
         return {
             room_id: id,
             days: duration,
-            price
+            price, status
         };
-    }).filter(ele => ele != {});
+    }).filter(ele => !(Object.keys(ele).length === 0 && ele.constructor === Object));
+
+    if (rooms.length == 0) {
+        return { result: false }
+    }
+
     let username = document.getElementById("username-input").value;
     let customerName = document.getElementById("customer_name").value;
     let address = document.getElementById("address").value;
@@ -147,7 +162,8 @@ async function onRDSubmit() {
         username: checkResult.username,
         customer_name: checkResult.customer_name,
         address: checkResult.address,
-        rooms: checkResult.rooms
+        rooms: checkResult.rooms,
+        status: checkResult.status
     };
     let res = await fetch('/create_receipt', {
         method: "POST",
@@ -185,9 +201,10 @@ async function onRDEditSubmit() {
         username: checkResult.username,
         customer_name: checkResult.customer_name,
         address: checkResult.address,
-        rooms: checkResult.rooms
+        rooms: checkResult.rooms,
+        status: checkResult.status
     };
-    console.log(body.rooms);
+
     let res = await fetch(window.location, {
         method: "POST",
         body: JSON.stringify(body),
@@ -209,4 +226,4 @@ var global_item_id;
 
 window.addEventListener('load', function () {
     global_item_id = Array.from(document.querySelectorAll("[name='rd-item']")).length;
-})
+});

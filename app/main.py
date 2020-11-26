@@ -2,8 +2,9 @@ from app import app, mail, db
 from app.admin import *
 from app.user import *
 from app.DAO import get_rooms as dao_get_rooms, get_room as dao_get_room, get_categories, get_category, save_room,\
-    get_receipts, count_user, save_receipt, get_receipt, get_receipt_details
-from app.models import RoomStatus, get_roles_as_dict, Receipt, ReceiptDetail, PaymentStatus
+    get_receipts, count_user, save_receipt, get_receipt, get_receipt_details, get_receipts_by_user
+from app.models import RoomStatus, get_roles_as_dict, Receipt, ReceiptDetail, PaymentStatus,\
+    get_payment_status_as_dict
 from flask import redirect, jsonify
 
 
@@ -40,6 +41,9 @@ def get_rooms():
 @app.route("/room/<id>", methods=["GET", "POST"])
 @login_required
 def get_room_details(id):
+    if current_user.role is UserRole.CUSTOMER:
+        return redirect("/login")
+
     room = dao_get_room(id)
 
     if room is None:
@@ -68,6 +72,9 @@ def get_room_details(id):
 @app.route("/create_receipt", methods=["POST"])
 @login_required
 def create_receipt():
+    if current_user.role is UserRole.CUSTOMER:
+        return "Unauthorized", 401
+
     data = request.get_json()
     user_id = data.get("username")
     customer_name = data.get("customer_name")
@@ -84,17 +91,26 @@ def create_receipt():
         user_id = None
 
     new_receipt.user_id = user_id
-    rooms = data.get("rooms")
+    items = data.get("rooms")
     save_receipt(new_receipt)
     details = []
+    receipt_total = 0.0
 
-    for room in rooms:
-        room["receipt_id"] = new_receipt.id
-        room["status"] = PaymentStatus.PENDING
-        new_room = ReceiptDetail(room)
-        details.append(new_room)
+    for item in items:
+        item["receipt_id"] = new_receipt.id
+        status = item["status"]
+
+        if status is None or len(status) == 0:
+            item["status"] = PaymentStatus.PENDING
+        else:
+            item["status"] = PaymentStatus[status]
+
+        new_item = ReceiptDetail(item)
+        receipt_total += new_item.total
+        details.append(new_item)
 
     new_receipt.details = details
+    new_receipt.total = receipt_total
     save_receipt(new_receipt)
 
     return '', 200
@@ -103,11 +119,15 @@ def create_receipt():
 @app.route("/receipts/<state>", methods=["GET"])
 @login_required
 def obtain_receipts(state):
+    if current_user.role is UserRole.CUSTOMER:
+        return "Unauthorized", 401
+
     if state != "new" and state != "view":
         state = "view"
 
     if state == "new":
-        return render_template("/receipts.html", roles=get_roles_as_dict(), rooms=dao_get_rooms(), state=state)
+        return render_template("/receipts.html", roles=get_roles_as_dict(), rooms=dao_get_rooms(), state=state,
+                               payment_status=get_payment_status_as_dict())
 
     return render_template("/receipts.html", roles=get_roles_as_dict(), list=get_receipts(), state=state)
 
@@ -121,7 +141,13 @@ def receipt_details(receipt_id):
         return render_template("/receipt_details.html", roles=get_roles_as_dict(), error="Receipt not found")
 
     if request.method == "GET":
-        return render_template("/receipt_details.html", roles=get_roles_as_dict(), receipt=receipt, rooms=dao_get_rooms())
+        if current_user.role is UserRole.CUSTOMER and receipt.user_id != current_user.id:
+
+            return render_template("/receipt_details.html", roles=get_roles_as_dict(), error="Access denied")
+
+        return render_template("/receipt_details.html", roles=get_roles_as_dict(), receipt=receipt,
+                               rooms=dao_get_rooms(), payment_status=get_payment_status_as_dict(),
+                               read_only=current_user.role == UserRole.CUSTOMER)
 
     data = request.get_json()
     user_id = data.get("username")
@@ -138,31 +164,49 @@ def receipt_details(receipt_id):
         user_id = None
 
     receipt.user_id = user_id
-    rooms = data.get("rooms")
+    items = data.get("rooms")
 
-    if len(rooms) == 0:
+    if len(items) == 0:
         return "Receipt items can not be empty", 400
 
     details = []
+    receipt_total = 0.0
 
-    for detail in rooms:
-        detail["receipt_id"] = receipt_id
-        detail["status"] = PaymentStatus.PENDING
-        new_detail = get_receipt_details(detail["receipt_id"], detail["room_id"])
+    for item in items:
+        item["receipt_id"] = receipt_id
 
-        if new_detail is not None:
-            new_detail.days = int(detail["days"])
-            new_detail.price = float(detail["price"])
-            new_detail.total = new_detail.days * new_detail.price
+        status = item["status"]
+
+        if status is None or len(status) == 0:
+            item["status"] = PaymentStatus.PENDING
         else:
-            new_detail = ReceiptDetail(detail)
+            item["status"] = PaymentStatus[status]
 
-        details.append(new_detail)
+        new_item = get_receipt_details(item["receipt_id"], item["room_id"])
+
+        if new_item is not None:
+            new_item.days = int(item["days"])
+            new_item.price = float(item["price"])
+            new_item.status = item["status"]
+            new_item.total = new_item.days * new_item.price
+        else:
+            new_item = ReceiptDetail(item)
+
+        receipt_total += new_item.total
+        details.append(new_item)
 
     receipt.details = details
+    receipt.total = receipt_total
     db.session.commit()
 
     return '', 200
+
+
+@app.route("/u/receipts")
+@login_required
+def get_personal_receipts():
+
+    return render_template("personal_receipts.html", list=get_receipts_by_user(current_user.id), roles=get_roles_as_dict())
 
 
 if __name__ == "__main__":

@@ -50,6 +50,11 @@ def get_receipts():
 	return Receipt.query.all()
 
 
+def get_receipts_by_user(id):
+	print(id)
+	return Receipt.query.filter(Receipt.user_id == id.strip()).all()
+
+
 def get_receipt(id):
 
 	return Receipt.query.filter(Receipt.id == id.strip()).first()
