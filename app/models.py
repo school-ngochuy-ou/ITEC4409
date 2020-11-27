@@ -2,7 +2,7 @@ import enum
 import datetime
 from app import db
 from sqlalchemy import Column, Integer, String, Float, \
-	Enum, ForeignKey, Boolean, Date
+	Enum, ForeignKey, Boolean, Date, ForeignKeyConstraint
 from sqlalchemy.orm import relationship, backref
 from flask_login import UserMixin
 
@@ -104,6 +104,23 @@ class ReceiptDetail(BaseModel):
 			self.price = float(args.get("price"))
 			self.status = args.get("status")
 			self.total = self.days * self.price
+			self.customers_detail = args.get("customers_detail")
+
+	def update_stats(self):
+		price = self.price
+
+		if len(self.customers_detail) == 3:
+			price += (price * 0.25)
+
+		has_foreigner = False
+
+		for detail in self.customers_detail:
+			if detail.type == CustomerType.FOREIGN:
+				has_foreigner = True
+				break
+
+		if has_foreigner:
+			price += price * 0.5
 
 	receipt_id = Column(Integer, ForeignKey(Receipt.id), primary_key=True)
 	room_id = Column(Integer, ForeignKey(Room.id), primary_key=True)
@@ -113,6 +130,30 @@ class ReceiptDetail(BaseModel):
 	status = Column(Enum(PaymentStatus), nullable=False)
 	room = relationship(Room, backref=backref("details", cascade="all, delete-orphan"))
 	receipts = relationship(Receipt, backref=backref("details", cascade="all, delete-orphan"))
+
+
+class CustomerType(enum.Enum):
+	DOMESTIC = "DOMESTIC"
+	FOREIGN = "FOREIGNER"
+
+
+class ReceiptCustomersDetail(BaseModel):
+	__tablename__ = "receipt_customers_detail"
+	__table_args__ = (
+		ForeignKeyConstraint(
+			['receipt_detail_receipt_id', 'receipt_detail_room_id'],
+			['receipt_details.receipt_id', 'receipt_details.room_id'],
+		),
+	)
+
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(255), nullable=False)
+	type = Column(Enum(CustomerType), nullable=False)
+	citizen_id = Column(String(12), nullable=True)
+	address = Column(String(255), nullable=True)
+	receipt_detail_receipt_id = Column(Integer, nullable=False)
+	receipt_detail_room_id = Column(Integer, nullable=False)
+	receipt_detail = db.relationship(ReceiptDetail, backref=db.backref('customers_details', lazy=True))
 
 
 def get_roles_as_dict():
