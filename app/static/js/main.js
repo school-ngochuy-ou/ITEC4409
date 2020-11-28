@@ -75,6 +75,50 @@ async function onAddItemClick() {
                     Remove</button>
                 </div>
             </div>
+            <div class="row ml-4" name="cd-container" data-id=${nextId}>
+                <table class="table">
+                    <thead class="thead-dark">
+                        <th scope="col">Customer name</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Citizen ID</th>
+                        <th scope="col">Address</th>
+                        <th scope="col">Actions</th>
+                    </thead>
+                    <tbody>
+                        <tr name="cd-item-container" data-id=0>
+                            <td>
+                                <input type="text" class="form-control" placeholder="Customer name"
+                                name="cd-customer-name" required="required">
+                            </td>
+                            <td>
+                                <select name="cd-customer-type" required="required"
+                                class="form-control">
+                                    <option value="DOMESTIC">DOMESTIC</option>
+                                    <option value="FOREIGN">FOREIGN</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" placeholder="Citizen ID"
+                                name="cd-citizen-id" required="required">
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" placeholder="Address"
+                                name="cd-address" required="required">
+                            </td>
+                            <td>
+                                <button type="button" name="cd-item-remove-btn"
+                                class="btn btn-danger" onclick="onCDItemRemoveBtn(${nextId}, 0)"
+                                >Remove</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="w-100 text-right">
+                    <button type="button" name="cd-add-btn"
+                    class="btn btn-secondary"
+                    onclick="onCDAddBtnClick(${nextId})">Add Customer</button>
+                </div>
+            </div>
         </div>
     `;
     root.insertAdjacentHTML('beforeend', html);
@@ -222,8 +266,74 @@ async function onRDEditSubmit() {
     return;
 }
 
+function onCDAddBtnClick(cDId) {
+    let container = document.querySelector(`div[name='cd-container'][data-id='${cDId}']`);
+    let itemContainers = Array.from(container.querySelectorAll(`tr[name='cd-item-container']`));
+    let itemQty = itemContainers.length;
+    let newItem;
+
+    if (itemQty >= 2) {
+        container.querySelector(`button[name='cd-add-btn']`).remove();
+
+        if (itemQty > 2) {
+            return;
+        }
+    }
+
+    newItem = `
+        <tr name="cd-item-container" data-id=${++globalCDItemId}>
+            <td>
+                <input type="text" class="form-control" placeholder="Customer name"
+                name="cd-customer-name" required="required">
+            </td>
+            <td>
+                <select name="cd-customer-type" required="required"
+                class="form-control">
+                    <option value="DOMESTIC">DOMESTIC</option>
+                    <option value="FOREIGN">FOREIGN</option>
+                </select>
+            </td>
+            <td>
+                <input type="text" class="form-control" placeholder="Citizen ID"
+                name="cd-citizen-id" required="required">
+            </td>
+            <td>
+                <input type="text" class="form-control" placeholder="Address"
+                name="cd-address" required="required">
+            </td>
+            <td>
+                <button type="button" name="cd-item-remove-btn"
+                class="btn btn-danger" onclick="onCDItemRemoveBtn(${cDId}, ${globalCDItemId})"
+                >Remove</button>
+            </td>
+        </tr>
+    `;
+    container.querySelector("tbody").insertAdjacentHTML("beforeend", newItem);
+}
+
+function onCDItemRemoveBtn(cDId, cDItemId) {
+    document.querySelector(`div[name='rd-item'][data-id='${cDId}']`)
+        .querySelector(`tr[name='cd-item-container'][data-id='${cDItemId}']`)
+        .remove();
+
+    if (document.querySelector(`div[name='rd-item'][data-id='${cDId}']`)
+        .querySelectorAll(`tr[name='cd-item-container']`)
+        .length == 2) {
+        document.querySelector(`div[name='cd-container'][data-id='${cDId}']`)
+            .insertAdjacentHTML('beforeend', `
+                <div class="w-100 text-right">
+                    <button type="button" name="cd-add-btn"
+                    class="btn btn-secondary"
+                    onclick="onCDAddBtnClick(${cDId})">Add Customer</button>
+                </div>
+            `);
+    }
+}
+
 var global_item_id;
+var globalCDItemId;
 
 window.addEventListener('load', function () {
     global_item_id = Array.from(document.querySelectorAll("[name='rd-item']")).length;
+    globalCDItemId = Array.from(document.querySelectorAll("[name='cd-item-container']")).length;
 });

@@ -4,7 +4,7 @@ from app.user import *
 from app.DAO import get_rooms as dao_get_rooms, get_room as dao_get_room, get_categories, get_category, save_room,\
     get_receipts, count_user, save_receipt, get_receipt, get_receipt_details, get_receipts_by_user
 from app.models import RoomStatus, get_roles_as_dict, Receipt, ReceiptDetail, PaymentStatus,\
-    get_payment_status_as_dict
+    get_payment_status_as_dict, CustomerType
 from flask import redirect, jsonify
 
 
@@ -127,7 +127,8 @@ def obtain_receipts(state):
 
     if state == "new":
         return render_template("/receipts.html", roles=get_roles_as_dict(), rooms=dao_get_rooms(), state=state,
-                               payment_status=get_payment_status_as_dict())
+                               payment_status=get_payment_status_as_dict(),
+                               customer_types=[CustomerType.DOMESTIC, CustomerType.FOREIGN])
 
     return render_template("/receipts.html", roles=get_roles_as_dict(), list=get_receipts(), state=state)
 

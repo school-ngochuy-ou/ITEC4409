@@ -134,7 +134,7 @@ class ReceiptDetail(BaseModel):
 
 class CustomerType(enum.Enum):
 	DOMESTIC = "DOMESTIC"
-	FOREIGN = "FOREIGNER"
+	FOREIGN = "FOREIGN"
 
 
 class ReceiptCustomersDetail(BaseModel):
@@ -171,6 +171,14 @@ def get_payment_status_as_dict():
 	return dict({
 		"paid": PaymentStatus.PAID,
 		"pending": PaymentStatus.PENDING,
+	})
+
+
+def get_customer_type_as_dict():
+
+	return dict({
+		"domestic": CustomerType.DOMESTIC,
+		"foreign": CustomerType.FOREIGN
 	})
 
 
