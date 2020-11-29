@@ -2,9 +2,10 @@ from app import app, mail, db
 from app.admin import *
 from app.user import *
 from app.DAO import get_rooms as dao_get_rooms, get_room as dao_get_room, get_categories, get_category, save_room,\
-    get_receipts, count_user, save_receipt, get_receipt, get_receipt_details, get_receipts_by_user
+    get_receipts, count_user, save_receipt, get_receipt, get_receipt_details, get_receipts_by_user,\
+    save_receipt_detail, save_receipt_customers_detail, delete_receipt_customers_detail
 from app.models import RoomStatus, get_roles_as_dict, Receipt, ReceiptDetail, PaymentStatus,\
-    get_payment_status_as_dict, CustomerType
+    get_payment_status_as_dict, CustomerType, ReceiptCustomersDetail
 from flask import redirect, jsonify
 
 
@@ -106,8 +107,25 @@ def create_receipt():
             item["status"] = PaymentStatus[status]
 
         new_item = ReceiptDetail(item)
-        receipt_total += new_item.total
+        save_receipt_detail(new_item)
+        customers_detail = item["customers_detail"]
+
+        if len(customers_detail) < 1 or len(customers_detail) > 3:
+            return 'Customers detail in a room can not be empty', 400
+
+        cds = []
+
+        for cd in customers_detail:
+            new_customers_detail = ReceiptCustomersDetail(cd)
+            new_customers_detail.receipt_detail_receipt_id = new_item.receipt_id
+            new_customers_detail.receipt_detail_room_id = new_item.room_id
+            save_receipt_customers_detail(new_customers_detail)
+            cds.append(new_customers_detail)
+
+        new_item.customers_detail = cds
+        new_item.update_stats()
         details.append(new_item)
+        receipt_total += new_item.total
 
     new_receipt.details = details
     new_receipt.total = receipt_total
@@ -148,7 +166,8 @@ def receipt_details(receipt_id):
 
         return render_template("/receipt_details.html", roles=get_roles_as_dict(), receipt=receipt,
                                rooms=dao_get_rooms(), payment_status=get_payment_status_as_dict(),
-                               read_only=current_user.role == UserRole.CUSTOMER)
+                               read_only=current_user.role == UserRole.CUSTOMER,
+                               customer_types=[CustomerType.DOMESTIC, CustomerType.FOREIGN])
 
     data = request.get_json()
     user_id = data.get("username")
@@ -172,10 +191,10 @@ def receipt_details(receipt_id):
 
     details = []
     receipt_total = 0.0
+    delete_receipt_customers_detail(receipt.id)
 
     for item in items:
         item["receipt_id"] = receipt_id
-
         status = item["status"]
 
         if status is None or len(status) == 0:
@@ -193,8 +212,25 @@ def receipt_details(receipt_id):
         else:
             new_item = ReceiptDetail(item)
 
-        receipt_total += new_item.total
+        save_receipt_detail(new_item)
+        customers_detail = item["customers_detail"]
+
+        if len(customers_detail) < 1 or len(customers_detail) > 3:
+            return 'Customers detail in a room can not be empty', 400
+
+        cds = []
+
+        for cd in customers_detail:
+            new_customers_detail = ReceiptCustomersDetail(cd)
+            new_customers_detail.receipt_detail_receipt_id = new_item.receipt_id
+            new_customers_detail.receipt_detail_room_id = new_item.room_id
+            save_receipt_customers_detail(new_customers_detail)
+            cds.append(new_customers_detail)
+
+        new_item.customers_detail = cds
+        new_item.update_stats()
         details.append(new_item)
+        receipt_total += new_item.total
 
     receipt.details = details
     receipt.total = receipt_total

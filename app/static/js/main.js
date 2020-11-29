@@ -136,6 +136,7 @@ function onRDRemoveBtnClick(id) {
 function checkRDForm() {
     let form = document.getElementById("rd-form");
     let rooms = document.querySelectorAll("[name='rd-item']");
+    let flag = true;
 
     rooms = Array.from(rooms).map(e => {
         id = e.querySelector("select[id='rd-room-id']").value;
@@ -145,16 +146,25 @@ function checkRDForm() {
 
         if (isEmpty([id, duration, price])) {
             document.getElementById("rd-items-msg").innerText = "Receipt details can not contain empty information";
+            flag = false;
 
             return { };
         }
 
         document.getElementById("rd-items-msg").innerText = "";
 
+        let cdResult = checkCustomersDetail(parseInt(e.getAttribute('data-id')));
+
+        if (!cdResult.result) {
+            flag = false;
+            return { };
+        }
+
         return {
             room_id: id,
             days: duration,
-            price, status
+            price, status,
+            customers_detail: cdResult.customers_detail
         };
     }).filter(ele => !(Object.keys(ele).length === 0 && ele.constructor === Object));
 
@@ -187,12 +197,50 @@ function checkRDForm() {
     document.getElementById('username-input-msg').innerText = "";
 
     return {
-        result: true,
+        result: flag,
         username,
         customer_name: customerName,
         address,
         rooms
     };
+}
+
+function checkCustomersDetail(cDId) {
+    let root = document.querySelector(`div[name='rd-item'][data-id='${cDId}']`);
+    let containers = root.querySelectorAll(`tr[name="cd-item-container"]`);
+    let flag = true;
+    let customersDetail = Array.from(containers).map(ele => {
+        let customerName = ele.querySelector('input[name="cd-customer-name"]').value;
+        let type = ele.querySelector('select[name="cd-customer-type"]').value;
+        let citizenId = ele.querySelector('input[name="cd-citizen-id"]').value;
+        let address = ele.querySelector('input[name="cd-address"]').value;
+
+        if (isEmpty([customerName, type])) {
+            alert("Customers name and Customer type information in a room can not be empty");
+            flag = false;
+
+            return {};
+        }
+
+        return {
+            result: flag,
+            name: customerName,
+            type,
+            citizen_id: citizenId,
+            address
+        };
+    })
+    .filter(ele => !(Object.keys(ele).length === 0 && ele.constructor === Object));
+
+    if (customersDetail.length <= 0) {
+        alert("Customers detail information can not be empty");
+        flag = false;
+    }
+
+    return {
+        result: flag,
+        customers_detail: customersDetail
+    }
 }
 
 async function onRDSubmit() {

@@ -1,4 +1,4 @@
-from app.models import User, Room, Category, Receipt, ReceiptDetail
+from app.models import User, Room, Category, Receipt, ReceiptDetail, ReceiptCustomersDetail
 from app import db
 
 
@@ -76,3 +76,25 @@ def save_receipt(receipt):
 	db.session.commit()
 
 	return receipt
+
+
+def save_receipt_detail(detail):
+	db.session.add(detail)
+	db.session.commit()
+
+	return detail
+
+
+def save_receipt_customers_detail(detail):
+	db.session.add(detail)
+	db.session.commit()
+
+	return detail
+
+
+def delete_receipt_customers_detail(receipt_id):
+
+	return ReceiptCustomersDetail.query.filter(ReceiptCustomersDetail.receipt_detail_receipt_id == receipt_id)\
+		.delete()
+
+

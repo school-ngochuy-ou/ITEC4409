@@ -109,6 +109,9 @@ class ReceiptDetail(BaseModel):
 	def update_stats(self):
 		price = self.price
 
+		if price is None:
+			price = self.room.price
+
 		if len(self.customers_detail) == 3:
 			price += (price * 0.25)
 
@@ -121,6 +124,8 @@ class ReceiptDetail(BaseModel):
 
 		if has_foreigner:
 			price += price * 0.5
+
+		self.total = price * self.days
 
 	receipt_id = Column(Integer, ForeignKey(Receipt.id), primary_key=True)
 	room_id = Column(Integer, ForeignKey(Room.id), primary_key=True)
@@ -145,6 +150,13 @@ class ReceiptCustomersDetail(BaseModel):
 			['receipt_details.receipt_id', 'receipt_details.room_id'],
 		),
 	)
+
+	def __init__(self, args):
+		if type(args) is dict:
+			self.name = args.get("name")
+			self.type = args.get("type")
+			self.citizen_id = args.get("citizen_id")
+			self.address = args.get("address")
 
 	id = Column(Integer, primary_key=True, autoincrement=True)
 	name = Column(String(255), nullable=False)

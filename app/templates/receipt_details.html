@@ -108,8 +108,8 @@
                             type="button" onclick="onAddItemClick()">Add item</button>
                         </div>
                     </div>
-                    {% for detail in receipt.details %}
-                    <div id="receipt-items-container">
+                        <div id="receipt-items-container">
+                        {% for detail in receipt.details %}
                         <div class="row" name="rd-item" data-id="{{ loop.index - 1 }}">
                             <div class="col">
                                 <div class="form-group">
@@ -160,9 +160,65 @@
                                     onclick="onRDRemoveBtnClick({{ loop.index - 1 }})">Remove</button>
                                 </div>
                             </div>
+                            <div class="row ml-4" name="cd-container" data-id="{{ loop.index - 1 }}">
+                                <table class="table">
+                                    <thead class="thead-dark">
+                                        <th scope="col">Customer name</th>
+                                        <th scope="col">Type</th>
+                                        <th scope="col">Citizen ID</th>
+                                        <th scope="col">Address</th>
+                                        <th scope="col">Actions</th>
+                                    </thead>
+                                    <tbody>
+                                    {% set rowloop = loop %}
+                                    {% for cd in detail.customers_details %}
+                                        <tr name="cd-item-container" data-id="{{ loop.index - 1 }}">
+                                            <td>
+                                                <input type="text" class="form-control" placeholder="Customer name"
+                                                       name="cd-customer-name" required="required"
+                                                    value="{{ cd.name }}">
+                                            </td>
+                                            <td>
+                                                <select name="cd-customer-type" required="required"
+                                                        class="form-control">
+                                                    {% for type in customer_types %}
+                                                        <option value="{{ type.value }}"
+                                                        {% if type.value == cd.type.value %} selected {% endif %}>
+                                                            {{ type.value }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" placeholder="Citizen ID"
+                                                       name="cd-citizen-id" required="required"
+                                                value="{{ cd.citizen_id }}">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" placeholder="Address"
+                                                       name="cd-address" required="required"
+                                                value="{{ cd.address }}">
+                                            </td>
+                                            <td>
+                                                <button type="button" name="cd-item-remove-btn"
+                                                        class="btn btn-danger" onclick="onCDItemRemoveBtn({{ rowloop.index - 1}}, {{ loop.index - 1 }})"
+                                                >Remove</button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% if detail.customers_details|length < 3 %}
+                                    <div class="w-100 text-right">
+                                        <button type="button" name="cd-add-btn"
+                                                class="btn btn-secondary"
+                                                onclick="onCDAddBtnClick({{ loop.index - 1 }})">Add Customer</button>
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
                 <button class="btn btn-primary" type="button"
                         onclick="onRDEditSubmit()">Submit</button>
