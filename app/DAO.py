@@ -1,5 +1,7 @@
 from app.models import User, Room, Category, Receipt, ReceiptDetail, ReceiptCustomersDetail
 from app import db
+from sqlalchemy.sql import func, extract
+from datetime import datetime
 
 
 def get_user(id):
@@ -98,3 +100,27 @@ def delete_receipt_customers_detail(receipt_id):
 		.delete()
 
 
+def get_sale_by_category(month):
+	result = db.engine.execute('''SELECT
+		rd.name,
+		SUM(rd.total) AS total,
+		round((SUM(rd.total) / rd.overall_total * 100), 2) AS percentage
+	FROM (
+		SELECT rd.*, o.overall_total, t.name
+		FROM receipt_details rd INNER JOIN (
+				SELECT r.id AS room_id, c.name
+				FROM rooms r INNER JOIN categories c ON r.category_id = c.id
+			) t ON rd.room_id = t.room_id, (
+				SELECT SUM(total) as overall_total FROM receipt_details
+			) o
+		GROUP BY rd.receipt_id, rd.room_id
+	) AS rd
+	WHERE MONTH(rd.created_date) = ''' + month + '''
+	GROUP BY rd.name;''')
+
+	for row in result:
+		print(row.name)
+		print(row.total)
+		print(row.percentage)
+
+	return None

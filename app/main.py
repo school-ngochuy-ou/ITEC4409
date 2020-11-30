@@ -3,10 +3,13 @@ from app.admin import *
 from app.user import *
 from app.DAO import get_rooms as dao_get_rooms, get_room as dao_get_room, get_categories, get_category, save_room,\
     get_receipts, count_user, save_receipt, get_receipt, get_receipt_details, get_receipts_by_user,\
-    save_receipt_detail, save_receipt_customers_detail, delete_receipt_customers_detail
+    save_receipt_detail, save_receipt_customers_detail, delete_receipt_customers_detail, get_sale_by_category
 from app.models import RoomStatus, get_roles_as_dict, Receipt, ReceiptDetail, PaymentStatus,\
     get_payment_status_as_dict, CustomerType, ReceiptCustomersDetail
 from flask import redirect, jsonify
+
+
+get_sale_by_category()
 
 
 @app.route("/")
