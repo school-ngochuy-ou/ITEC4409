@@ -26,6 +26,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('obtain_receipts', state='view') }}">Receipts</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('stats') }}">Statistics</a>
+                            </li>
                         {% endif %}
                         {% if current_user.role == roles["admin"] %}
                             <li class="nav-item">

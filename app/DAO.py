@@ -115,12 +115,7 @@ def get_sale_by_category(month):
 			) o
 		GROUP BY rd.receipt_id, rd.room_id
 	) AS rd
-	WHERE MONTH(rd.created_date) = ''' + month + '''
+	WHERE MONTH(rd.created_date) = ''' + str(month) + '''
 	GROUP BY rd.name;''')
 
-	for row in result:
-		print(row.name)
-		print(row.total)
-		print(row.percentage)
-
-	return None
+	return result

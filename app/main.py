@@ -7,9 +7,7 @@ from app.DAO import get_rooms as dao_get_rooms, get_room as dao_get_room, get_ca
 from app.models import RoomStatus, get_roles_as_dict, Receipt, ReceiptDetail, PaymentStatus,\
     get_payment_status_as_dict, CustomerType, ReceiptCustomersDetail
 from flask import redirect, jsonify
-
-
-get_sale_by_category()
+import json
 
 
 @app.route("/")
@@ -247,6 +245,40 @@ def receipt_details(receipt_id):
 def get_personal_receipts():
 
     return render_template("personal_receipts.html", list=get_receipts_by_user(current_user.id), roles=get_roles_as_dict())
+
+
+@app.route("/stats")
+@login_required
+def stats():
+    if current_user.role != UserRole.MANAGER and current_user.role != UserRole.ADMIN:
+        return redirect("/")
+
+    return render_template("stats.html", roles=get_roles_as_dict())
+
+
+@app.route("/stats/category")
+def obtain_sales_by_category():
+    month = request.args.get("month")
+
+    if month is None or len(month) == 0:
+        return json.loads("{}"), 200
+
+    month = int(month)
+
+    if month < 1 or month > 12:
+        return json.loads("{}"), 200
+
+    results = get_sale_by_category(month)
+    json_objects = []
+
+    for r in results:
+        json_objects.append({
+            "name": r.name,
+            "total": r.total,
+            "percentage": r.percentage
+        })
+
+    return jsonify(sales=json_objects)
 
 
 if __name__ == "__main__":
