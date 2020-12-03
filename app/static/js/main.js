@@ -410,10 +410,44 @@ async function onMonthSelectChange() {
     return;
 }
 
+async function onOccupationRateMonthSelectChange() {
+    let target = document.querySelector('select[name="occupation-rate-month-picker"]');
+    let value = target.value;
+    let res = await fetch(`${window.location}/occupation?month=${value}`)
+                        .then(async res => await res.json())
+                        .catch(err => console.error(err));
+    let caption = document.querySelector('caption[name="occupation-rate-caption"]');
+    let eles = res.rates;
+    let container = document.querySelector('tbody[name="occupation-rate-items-container"]');
+
+    if (eles.length == 0) {
+        caption.innerText = "Nothing found";
+        container.innerHTML = "";
+        return;
+    }
+
+    let dom;
+
+    caption.innerText = "";
+    dom = eles.map((ele, index) => `
+        <tr>
+            <td scope="row">${index + 1}</td>
+            <td>${ele.name}</td>
+            <td>${ele.total}</td>
+            <td>${ele.percentage}%</td>
+        </tr>
+    `).join('');
+    container.innerHTML = dom;
+
+    return;
+}
+
 var global_item_id;
 var globalCDItemId;
 
-window.addEventListener('load', function () {
+window.addEventListener('load', function() {
     global_item_id = Array.from(document.querySelectorAll("[name='rd-item']")).length;
     globalCDItemId = Array.from(document.querySelectorAll("[name='cd-item-container']")).length;
+    onMonthSelectChange();
+    onOccupationRateMonthSelectChange();
 });
