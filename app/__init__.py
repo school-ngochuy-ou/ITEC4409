@@ -3,13 +3,16 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
 import json
+import os
+
 
 app = Flask(__name__)
 app.secret_key = '\xc4qr\xfa\xd97_6.\xa3\xf8\x13\x1ds\xa8y'
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:root@localhost/python_hotel"
 app.config["SQLALCHEMY_TRACK_MODIFICATION"] = True
+module_dir = os.path.dirname(__file__)
 
-with open("config.json") as f:
+with open(os.path.join(module_dir, "config.json")) as f:
 	json_config = json.load(f)
 
 app.config.update(dict(
