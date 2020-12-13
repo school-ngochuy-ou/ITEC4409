@@ -7,7 +7,7 @@
         {% else %}
             <h1 class="text-center text-primary">Edit room</h1>
             <form method="POST">
-                {% if current_user.role == roles.admin or current_user.role == role.manager %}
+                {% if current_user.role == roles.admin or current_user.role == roles.manager %}
                     <div class="form-group">
                         <label for="name">Name</label>
                         <input type="text" class="form-control" id="name" aria-describedby="name" placeholder="Room name"

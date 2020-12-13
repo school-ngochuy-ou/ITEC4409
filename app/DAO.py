@@ -101,21 +101,36 @@ def delete_receipt_customers_detail(receipt_id):
 
 
 def get_sale_by_category(month):
-	result = db.engine.execute('''SELECT
-		rd.name,
-		SUM(rd.total) AS total,
-		round((SUM(rd.total) / rd.overall_total * 100), 2) AS percentage
-	FROM (
-		SELECT rd.*, o.overall_total, t.name
-		FROM receipt_details rd INNER JOIN (
-				SELECT r.id AS room_id, c.name
-				FROM rooms r INNER JOIN categories c ON r.category_id = c.id
-			) t ON rd.room_id = t.room_id, (
-				SELECT SUM(total) as overall_total FROM receipt_details
-			) o
-		GROUP BY rd.receipt_id, rd.room_id
-	) AS rd
-	WHERE MONTH(rd.created_date) = ''' + str(month) + '''
-	GROUP BY rd.name;''')
+	result = db.engine.execute('''
+		SELECT
+			rd.name,
+			SUM(rd.total) AS total,
+			round((SUM(rd.total) / rd.overall_total * 100), 2) AS percentage
+		FROM (
+			SELECT rd.*, o.overall_total, t.name
+			FROM receipt_details rd INNER JOIN (
+					SELECT r.id AS room_id, c.name
+					FROM rooms r INNER JOIN categories c ON r.category_id = c.id
+				) t ON rd.room_id = t.room_id, (
+					SELECT SUM(total) as overall_total FROM receipt_details dts
+					WHERE MONTH(dts.created_date) = ''' + str(month) + '''
+				) o
+			GROUP BY rd.receipt_id, rd.room_id
+		) AS rd
+		WHERE MONTH(rd.created_date) = ''' + str(month) + '''
+		GROUP BY rd.name;
+	'''
+	)
+
+	return result
+
+
+def get_occupation_rate(month):
+	result = db.engine.execute('''
+		SELECT r.name, SUM(rd.days) AS total, round(SUM(rd.days) / 30 * 100, 2) AS percentage
+		FROM receipt_details rd INNER JOIN rooms r ON rd.room_id = r.id
+		WHERE MONTH(rd.created_date) = ''' + str(month) + '''
+		GROUP BY r.name;
+	''')
 
 	return result
