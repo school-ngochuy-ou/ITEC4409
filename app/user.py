@@ -1,6 +1,6 @@
 from app import app, login, mail
 from app.DAO import get_user, save_user
-from app.models import UserRole, User
+from app.models import UserRole, User, get_roles_as_dict
 from flask import request, redirect, render_template, url_for
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
@@ -161,13 +161,13 @@ def edit_user(id):
 	user = get_user(id)
 
 	if user is None:
-		return render_template("edit_account.html", error="User not found")
+		return render_template("edit_account.html", error="User not found", roles=get_roles_as_dict())
 
 	if request.method == "GET":
 		if user.id != current_user.id:
-			return render_template("edit_account.html", error="Access denied")
+			return render_template("edit_account.html", error="Access denied", roles=get_roles_as_dict())
 
-		return render_template("edit_account.html", user=user)
+		return render_template("edit_account.html", user=user, roles=get_roles_as_dict())
 
 	name = request.form["name"].strip()
 	email = request.form["email"].strip()
@@ -178,17 +178,17 @@ def edit_user(id):
 
 	if len(password) != 0:
 		if password != re_password:
-			return render_template("edit_account.html", user=user, message="Password and Re-password must match")
+			return render_template("edit_account.html", user=user, message="Password and Re-password must match", roles=get_roles_as_dict())
 
 	user.password = str(hashlib.md5(password.encode("utf-8")).hexdigest())
 	err = is_user_valid(user)
 
 	if err is not RegistrationErrors.NONE:
-		return render_template("edit_account.html", user=user, message=registration_handlers[err])
+		return render_template("edit_account.html", user=user, message=registration_handlers[err], roles=get_roles_as_dict())
 
 	save_user(user)
 
-	return render_template("edit_account.html", user=user, message="DONE")
+	return render_template("edit_account.html", user=user, message="DONE", roles=get_roles_as_dict())
 
 
 def is_user_valid(user):
